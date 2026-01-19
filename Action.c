@@ -78,31 +78,54 @@ Action()
 
 /**********************/
 
+#include "lrun.h"
+#include <string.h>
+#include <stdio.h>
+
 Action()
 {
-    char requestBody[8192];  // buffer for your correlation value
-    int len;
+    // ---------------------------
+    // Variable declarations at top
+    // ---------------------------
+    char requestBody[8192];        // buffer for request body
+    char escaped[8192];            // buffer if you want to escape CRLF for JSON
+    int len;                        // length of request body
+    char *corrValue;                // correlation value from server
 
-    // Get the correlation value
-    char *corrValue = lr_eval_string("{CorrValue}");
+    // ---------------------------
+    // Step 1: Simulate server response / correlation
+    // ---------------------------
+    lr_save_string("Line1\r\nLine2\r\nLine3", "ServerResponse");
 
-    // Copy it into the buffer including real CRLF
+    // Capture correlation value (here we just simulate)
+    lr_save_string(lr_eval_string("{ServerResponse}"), "CorrValue");
+    corrValue = lr_eval_string("{CorrValue}");
+
+    // ---------------------------
+    // Step 2: Copy correlation value into request buffer
+    // ---------------------------
     strcpy(requestBody, corrValue);
 
-    // Calculate length (important for binary send)
+    // Length of request body (required for BodyBinary)
     len = (int)strlen(requestBody);
 
-    // Send raw body using web_custom_request
+    // ---------------------------
+    // Step 3: Send JSON request with real CRLF preserved
+    // ---------------------------
+    web_add_auto_header("Content-Type", "application/json", LAST);
+
     web_custom_request("AppianJSON",
-        "URL=http://dummy.test/appian",
+        "URL=http://dummy.test/appian",  // replace with real Appian URL
         "Method=POST",
-        "EncType=application/json",
         "BodyBinary=", requestBody, len,
         LAST
     );
 
-    lr_output_message("Sent request with real CRLF in memory buffer.");
+    // ---------------------------
+    // Step 4: Log output for verification
+    // ---------------------------
+    lr_output_message("Correlation value (original):\n%s", corrValue);
+    lr_outpu_
 
-    return 0;
-}
+
 
