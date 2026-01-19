@@ -39,3 +39,40 @@ Action()
 
     return 0;
 }
+
+
+
+/******************************************/
+
+Action()
+{
+    FILE *fp;
+    char *filename = "C:\\Temp\\requestBody.txt";
+
+    // Simulated correlation value with CRLF
+    char *corrValue = lr_eval_string("{CorrValue}");
+
+    // Write it to a file exactly as-is (including CRLF)
+    fp = fopen(filename, "w");
+    if (fp == NULL) {
+        lr_error_message("Cannot create file: %s", filename);
+        return -1;
+    }
+    fputs(corrValue, fp);  // writes real CRLF characters
+    fclose(fp);
+
+    // Send request using BODYFILE
+    web_custom_request("AppianJSON",
+        "URL=http://dummy.test/appian",
+        "Method=POST",
+        "EncType=application/json",
+        "BodyFile=C:\\Temp\\requestBody.txt",
+        LAST
+    );
+
+    lr_output_message("Request sent with real CRLF in body from file.");
+
+    return 0;
+}
+
+
