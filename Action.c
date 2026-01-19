@@ -76,3 +76,33 @@ Action()
 }
 
 
+/**********************/
+
+Action()
+{
+    char requestBody[8192];  // buffer for your correlation value
+    int len;
+
+    // Get the correlation value
+    char *corrValue = lr_eval_string("{CorrValue}");
+
+    // Copy it into the buffer including real CRLF
+    strcpy(requestBody, corrValue);
+
+    // Calculate length (important for binary send)
+    len = (int)strlen(requestBody);
+
+    // Send raw body using web_custom_request
+    web_custom_request("AppianJSON",
+        "URL=http://dummy.test/appian",
+        "Method=POST",
+        "EncType=application/json",
+        "BodyBinary=", requestBody, len,
+        LAST
+    );
+
+    lr_output_message("Sent request with real CRLF in memory buffer.");
+
+    return 0;
+}
+
