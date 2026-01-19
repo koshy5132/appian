@@ -1,4 +1,3 @@
-
 #include "lrun.h"
 #include <string.h>
 
@@ -14,13 +13,18 @@
 // ----------------------------------
 void lr_escape_for_json(char *input_param, char *output_param)
 {
-    char *src = lr_eval_string(input_param); // Get the value of the LR param
-    char temp[32768] = {0};                  // Make sure buffer is large enough
-    int j = 0;
+    char *src;                   // Pointer to original LR param value
+    char temp[32768];            // Buffer for escaped value
+    int i;                       // Index for source string
+    int j;                       // Index for temp buffer
 
-    for (int i = 0; src[i] != '\0'; i++)
+    src = lr_eval_string(input_param); // Get LR parameter value
+    memset(temp, 0, sizeof(temp));     // Initialize buffer
+    j = 0;
+
+    for(i = 0; src[i] != '\0'; i++)
     {
-        switch (src[i])
+        switch(src[i])
         {
             case '\\':
                 temp[j++] = '\\';
@@ -51,17 +55,36 @@ void lr_escape_for_json(char *input_param, char *output_param)
 
 Action()
 {
-    // Simulate a correlation value that has CRLF, quotes, and backslashes
+    // -----------------------------
+    // Declare all variables on top
+    // -----------------------------
+    char *originalValue;          // Pointer to original value
+    char escapedValue[32768];     // Buffer for escaped value
+    char *paramName;              // Name of LR parameter
+    char *escapedParamName;       // Name of escaped LR parameter
+    int i;                        // General purpose index
+
+    // -----------------------------
+    // Simulate correlation value
+    // -----------------------------
     lr_save_string("Hello \"World\"\r\nThis is line2\\end", "CorrValue");
+    paramName = "{CorrValue}";
+    escapedParamName = "CorrValue_Escaped";
 
-    // Escape for Appian JSON
-    lr_escape_for_json("{CorrValue}", "CorrValue_Escaped");
+    // -----------------------------
+    // Escape CRLF and special chars
+    // -----------------------------
+    lr_escape_for_json(paramName, escapedParamName);
 
-    // Print to verify
+    // -----------------------------
+    // Output for verification
+    // -----------------------------
     lr_output_message("Original Value: %s", lr_eval_string("{CorrValue}"));
     lr_output_message("Escaped Value : %s", lr_eval_string("{CorrValue_Escaped}"));
 
+    // -----------------------------
     // Use in a POST request
+    // -----------------------------
     web_custom_request("MyRequest",
         "URL=https://dummy.example.com/api",
         "Method=POST",
