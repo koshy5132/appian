@@ -1,25 +1,24 @@
+#ifndef GLOBALS_H
+#define GLOBALS_H
+
 #include "lrun.h"
 #include <string.h>
 
-// ----------------------------------
-// Escape a string for JSON/Appian request
-// Converts:
-//   \  -> \\
-//   "  -> \"
-//   \r -> \\r
-//   \n -> \\n
-// input_param: original LR parameter name (e.g., "{CorrValue}")
-// output_param: new LR parameter name to save escaped value
-// ----------------------------------
+// ---------------------------
+// Large buffers declared globally
+// ---------------------------
+char g_escapedBuffer[32768];   // Buffer for escaped strings
+
+// ---------------------------
+// Function to escape CRLF, quotes, backslash for JSON
+// ---------------------------
 void lr_escape_for_json(char *input_param, char *output_param)
 {
-    char *src;                   // Pointer to original LR param value
-    char temp[32768];            // Buffer for escaped value
-    int i;                       // Index for source string
-    int j;                       // Index for temp buffer
+    char *src;  // Pointer to original LR param value
+    int i, j;   // Indexes
 
-    src = lr_eval_string(input_param); // Get LR parameter value
-    memset(temp, 0, sizeof(temp));     // Initialize buffer
+    src = lr_eval_string(input_param);
+    memset(g_escapedBuffer, 0, sizeof(g_escapedBuffer)); // Clear buffer
     j = 0;
 
     for(i = 0; src[i] != '\0'; i++)
@@ -27,42 +26,44 @@ void lr_escape_for_json(char *input_param, char *output_param)
         switch(src[i])
         {
             case '\\':
-                temp[j++] = '\\';
-                temp[j++] = '\\';
+                g_escapedBuffer[j++] = '\\';
+                g_escapedBuffer[j++] = '\\';
                 break;
             case '\"':
-                temp[j++] = '\\';
-                temp[j++] = '\"';
+                g_escapedBuffer[j++] = '\\';
+                g_escapedBuffer[j++] = '\"';
                 break;
             case '\r':
-                temp[j++] = '\\';
-                temp[j++] = 'r';
+                g_escapedBuffer[j++] = '\\';
+                g_escapedBuffer[j++] = 'r';
                 break;
             case '\n':
-                temp[j++] = '\\';
-                temp[j++] = 'n';
+                g_escapedBuffer[j++] = '\\';
+                g_escapedBuffer[j++] = 'n';
                 break;
             default:
-                temp[j++] = src[i];
+                g_escapedBuffer[j++] = src[i];
                 break;
         }
     }
 
-    temp[j] = '\0';
-    lr_save_string(temp, output_param);
+    g_escapedBuffer[j] = '\0';
+    lr_save_string(g_escapedBuffer, output_param);
 }
 
+#endif
+
+
+
+#include "globals.h"
 
 Action()
 {
     // -----------------------------
-    // Declare all variables on top
+    // Declare only small local variables
     // -----------------------------
-    char *originalValue;          // Pointer to original value
-    char escapedValue[32768];     // Buffer for escaped value
-    char *paramName;              // Name of LR parameter
-    char *escapedParamName;       // Name of escaped LR parameter
-    int i;                        // General purpose index
+    char *paramName;
+    char *escapedParamName;
 
     // -----------------------------
     // Simulate correlation value
@@ -93,3 +94,4 @@ Action()
 
     return 0;
 }
+
