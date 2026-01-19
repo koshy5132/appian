@@ -78,6 +78,8 @@ Action()
 
 /**********************/
 
+
+
 #include "lrun.h"
 #include <string.h>
 #include <stdio.h>
@@ -125,7 +127,10 @@ Action()
     // Step 4: Log output for verification
     // ---------------------------
     lr_output_message("Correlation value (original):\n%s", corrValue);
-    lr_outpu_
+    lr_output_message("Request body sent with real CRLF.");
+
+    return 0;
+}
 
 
 
