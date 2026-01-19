@@ -1,52 +1,41 @@
-#ifndef GLOBALS_H
-#define GLOBALS_H
-
-#include "lrun.h"
-
-/*
- * Function: remove_newlines
- * Purpose : Completely remove all CR (\r) and LF (\n) characters
- */
-void remove_newlines(char *input_param, char *output_param)
-{
-    char *orig;
-    char cleaned[16384];  // big enough buffer
+// Escape CRLF for JSON
+void escape_crlf(const char *input, char *output) {
     int i, j = 0;
-
-    /* Get pointer to the evaluated string */
-    orig = lr_eval_string(input_param);
-
-    /* Loop through each character */
-    for (i = 0; orig[i] != '\0'; i++)
-    {
-        if (orig[i] != '\r' && orig[i] != '\n')
-        {
-            cleaned[j++] = orig[i];  // keep normal chars
+    for(i = 0; input[i] != '\0'; i++) {
+        if(input[i] == '\r') {
+            output[j++] = '\\';
+            output[j++] = 'r';
         }
-        /* else skip CR/LF */
+        else if(input[i] == '\n') {
+            output[j++] = '\\';
+            output[j++] = 'n';
+        }
+        else {
+            output[j++] = input[i];
+        }
     }
-
-    cleaned[j] = '\0';  // terminate string
-
-    /* Save cleaned string as LoadRunner parameter */
-    lr_save_string(cleaned, output_param);
+    output[j] = '\0';
 }
-
-#endif
-
-
-
 
 Action()
 {
-    /* Example with actual CRLF inside parameter */
+    char escaped[8192];
+
+    // Simulated correlation value (from server)
     lr_save_string("Line1\r\nLine2\r\nLine3", "CorrValue");
 
-    /* Remove all CRLF */
-    remove_newlines("{CorrValue}", "CorrValue_Clean");
+    // Escape CRLF so JSON parser interprets it correctly
+    escape_crlf(lr_eval_string("{CorrValue}"), escaped);
+    lr_save_string(escaped, "CorrValue_Escaped");
 
-    lr_output_message("Original: [%s]", lr_eval_string("{CorrValue}"));
-    lr_output_message("Cleaned : [%s]", lr_eval_string("{CorrValue_Clean}"));
+    lr_output_message("Escaped value sent in JSON:\n%s", lr_eval_string("{CorrValue_Escaped}"));
+
+    web_custom_request("AppianJSON",
+        "URL=http://dummy.test/appian",
+        "Method=POST",
+        "Body={\"text\":\"{CorrValue_Escaped}\"}",
+        LAST
+    );
 
     return 0;
 }
